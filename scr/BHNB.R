@@ -1,4 +1,4 @@
-# install library 
+# install libraries
 # library(dplyr)
 # library(doParallel)
 # library(DescTools)
