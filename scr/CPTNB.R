@@ -1,9 +1,4 @@
-rm(list=ls())
-gc()
-
-# install library
-source("C:\\Users\\jieun shin\\OneDrive - UOS\\바탕 화면\\논문\\R code\\functions.R", local = TRUE)
-
+# install libraries
 library(dplyr)
 library(doParallel)
 library(DescTools)
@@ -12,8 +7,7 @@ library(doSNOW)
 library(Rmpi)
 library(changepoint)
 
-# setting
-
+# setting the initial values
 N_tr = 100
 p = 100
 n_sig = 50
@@ -32,9 +26,9 @@ pb = txtProgressBar(max = N_Rep, style = 3)
 progress = function(n) setTxtProgressBar(pb, n)
 opts = list(progress = progress)
 
+# multiple processing
 result = foreach(j = 1:N_Rep, .packages = c('changepoint', 'dplyr'), .options.snow = opts) %dopar%{
                    
-  # for(j in 1:N_Rep){
   cat('iter :', j, '\n')
   print(Sys.time())
 
@@ -47,7 +41,7 @@ result = foreach(j = 1:N_Rep, .packages = c('changepoint', 'dplyr'), .options.sn
   fit = nbayes(tr$X, tr$Y)
   err_no = predict_nbayes(te$X, te$Y, fit$prob, fit$prior)$miss
   
-  # 시간 재기
+  # save the running time
   time = system.time({ try({sel = cptnb(tr$X, tr$Y)}, silent = TRUE) })[3]
   
   if(is.na(sel$var[1]) == TRUE){
@@ -59,7 +53,6 @@ result = foreach(j = 1:N_Rep, .packages = c('changepoint', 'dplyr'), .options.sn
     recall = NA
     f1_score = NA
   } else{
-    
     
     pred = predict_nbayes(te$X[,sel$var], te$Y, sel$prob, sel$prior)
     err_sel = pred$miss
@@ -77,7 +70,6 @@ result = foreach(j = 1:N_Rep, .packages = c('changepoint', 'dplyr'), .options.sn
     if(dim(result_tab)[2] == 1){
       result_tab = cbind(0, result_tab)}
     
-    # result.tab = table(te$Y, pred$Yhat)
     prec_class = diag(result_tab)/colSums(result_tab)
     prec_class[is.na(prec_class)] = 0
     precision =  mean(prec_class)
@@ -96,16 +88,9 @@ result = foreach(j = 1:N_Rep, .packages = c('changepoint', 'dplyr'), .options.sn
 stopCluster(cl)
 Sys.time()
 
-# result
+# summary the result
 tmp_dat = result %>% do.call(rbind, .) %>% data.frame(., stringsAsFactors = F)
 
 names(tmp_dat) = c('seed', 'err_no' , 'err_sel', 'n_sel', 'tp', 'fp', 'precision', 'recall', 'f1_score', 'time')
 apply(tmp_dat, 2, function(x) mean(x, na.rm = T)) %>% round(., 4)
 apply(tmp_dat, 2, function(x) sd(x, na.rm = T)/sqrt(N_Rep)) %>% round(., 4)
-
-# path = "C:\\Users\\uos\\Desktop\\논문\\R code\\cpt_result\\"
-# 
-# save(tmp_dat, file = paste0(path, "cpt_", N.tr, "_", p, "_result.Rdata"))
-# save(sel.var, file = paste0(path, "cpt_", N.tr, "_", p, "_var.Rdata"))
-
-
