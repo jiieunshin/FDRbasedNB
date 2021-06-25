@@ -1,2 +1,2 @@
 # FDRbasedNB
-FDR-based Naive Bayes
+FDR-based Naive Bayes model
