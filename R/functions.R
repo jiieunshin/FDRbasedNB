@@ -1,4 +1,5 @@
-# Generate the random variables
+#∫Øºˆª˝º∫
+
 sim_data = function(N, p)
 {
   Y = rbinom(N, size = 1, prob = 0.5)
@@ -30,7 +31,9 @@ sim_data = function(N, p)
 }
 
 
-# modeling Naive Bayes classifier for categorical variables
+
+######################################################################################################
+
 nbayes = function(X, Y)
 { 
   X = as.matrix(X)
@@ -49,7 +52,7 @@ nbayes = function(X, Y)
     #i=1
     for (i in 1:p)
     {
-      cnt[[i]] = table(Y, X[, i])         
+      cnt[[i]] = table(Y, X[, i])                              # pπ¯¬∞ ∫ØºˆøÕ Y¿« table
       
       for(q in 1:length(X_class))
       {
@@ -85,10 +88,10 @@ nbayes = function(X, Y)
     ##
     for(i in 1:p) 
     {
-      df[i] = (N_class - 1) * (length(unique(X[, i])) - 1)       # degrees of freedom
+      df[i] = (N_class - 1) * (length(unique(X[, i])) - 1)     # ¿⁄¿Øµµ
       chi[i] = ifelse(any(dim(cnt[[i]]) %in% 1) , 0, chisq.test(cnt[[i]])$statistic)
-      p_val[i] = 1 - pchisq(chi[i], df[i])                       # p-value
-      prob[[i]] = cnt[[i]] / apply(cnt[[i]], 1, sum)             # table
+      p_val[i] = 1 - pchisq(chi[i], df[i])                       # p-value ¥‹√¯
+      prob[[i]] = cnt[[i]] / apply(cnt[[i]], 1, sum)             # ∫Ò¿≤ table
     }
 
     ##
@@ -96,98 +99,14 @@ nbayes = function(X, Y)
     sort_chi = sort.int(chi, decreasing = TRUE, index.return = TRUE)$x
     
     result = list(prior = prior, prob = prob, df = df,
-                  index = ind, chi = sort_chi, pval = p_val[ind])  # sorting
+                  index = ind, chi = sort_chi, pval = p_val[ind])  #¡§∑ƒ«ÿº≠ √‚∑¬
   }
   return(result)
 }
 
 
-# Cross validation in Naive Bayes classifier
-cv_naive = function(X, Y, n_fold = 10)
-{
-  X = as.matrix(X)
-  N = nrow(X)
-  p = ncol(X)
-  
-  if (p == 0){return(list(test_error = 0))
-  } else{
-    
-    fold = data_split(Y, n_fold = n_fold)
-    cv = c()
+######################################################################################################
 
-    for (i in 1:n_fold)
-    {
-      fit = nbayes(X[fold != i,], Y[fold != i]) #train:test = 9:1
-      cv[i] = predict_nbayes(X[fold == i,], Y[fold == i], fit$prob, fit$prior)$miss
-      cv_se = sd(cv)/sqrt(n_fold)
-    }
-
-    return(list(fold = fold, test_error = cv, test_error_se = cv_se))  #test error
-  }
-}
-
-
-# Split the data for cross-validation                 
-data_split = function(Y, n_fold)
-{
-  
-  k = length(unique(Y))
-  N = length(Y)
-  if (min(Y) == 0)
-    y = Y + 1
-  else 
-    y = Y
-    class_size = table(y)
-    ran = rep(0, N) 
-  if ( (min(class_size) < n_fold) & (n_fold != N) )
-  {
-    warning('decrease your fold size!\n')
-    return(NULL)
-  }
-  if ( min(class_size) >= n_fold )
-  {
-    for (j in 1:k)
-      ran[y == j] = ceiling(sample(class_size[j])/(class_size[j] + 1) * n_fold) 
-  } else if (n_fold == N)
-    ran = 1:N
-  
-  return(ran)
-}
-
-
-# Predict the data in Naive Bayes classifier
-predict_nbayes = function(X, Y, prob, prior)
-{ 
-  X = as.matrix(X)
-  N = nrow(X)
-  p = ncol(X)
-  N_class = length(unique(Y))
-  Y_class = sort(unique(c(Y)))
-  
-  est = matrix(log(prior), N, N_class, byrow=TRUE)
-  for (i in 1:N) 
-  {
-    for (j in 1:p)    
-    {
-      est[i, ] = est[i, ] + as.numeric(log(prob[[j]][, X[i, j]]))
-    }
-  }
-  
-  Yhat = apply(est, 1, which.max) - 1
-
-  sub_Yhat = Yhat
-  for(i in 1:length(sort(unique(Yhat)))){
-    which_uni = which(Yhat == sort(unique(Yhat))[i])
-    sub_Yhat[which_uni] = Y_class[i]
-  }
-  
-  miss = mean(Y != sub_Yhat)
-  
-  return(list(Yhat = Yhat, miss = miss))
-}
-
-                 
-# Variable selection using change point analysis in Naive Bayes
 cptnb = function(X, Y)
 {
   X = as.matrix(X)
@@ -222,7 +141,97 @@ cptnb = function(X, Y)
 }
 
 
-# Variable selection using Benjamini-Hochberg algorithm
+############################################################################################
+
+cv_naive = function(X, Y, n_fold = 10)
+{
+  X = as.matrix(X)
+  N = nrow(X)
+  p = ncol(X)
+  
+  if (p == 0){return(list(test_error = 0))
+  } else{
+    
+    fold = data_split(Y, n_fold = n_fold)
+    cv = c()
+
+    for (i in 1:n_fold)
+    {
+      fit = nbayes(X[fold != i,], Y[fold != i]) #train:test = 9:1
+      cv[i] = predict_nbayes(X[fold == i,], Y[fold == i], fit$prob, fit$prior)$miss
+      cv_se = sd(cv)/sqrt(n_fold)
+    }
+
+    return(list(fold = fold, test_error = cv, test_error_se = cv_se))  #test error¥¬ ∆Ú±’
+  }
+}
+
+######################################################################################################
+
+data_split = function(Y, n_fold)
+{
+  
+  k = length(unique(Y))
+  N = length(Y)
+  if (min(Y) == 0)
+    y = Y + 1
+  else 
+    y = Y
+    class_size = table(y)
+    ran = rep(0, N) 
+  if ( (min(class_size) < n_fold) & (n_fold != N) )
+  {
+    warning('decrease your fold size!\n')
+    return(NULL)
+  }
+  if ( min(class_size) >= n_fold )
+  {
+    for (j in 1:k)
+      ran[y == j] = ceiling(sample(class_size[j])/(class_size[j] + 1) * n_fold) 
+  } else if (n_fold == N)
+    ran = 1:N
+  
+  return(ran)
+}
+
+
+######################################################################################################
+
+predict_nbayes = function(X, Y, prob, prior)
+{ 
+  X = as.matrix(X)
+  N = nrow(X)
+  p = ncol(X)
+  N_class = length(unique(Y))
+  Y_class = sort(unique(c(Y)))
+  
+  est = matrix(log(prior), N, N_class, byrow=TRUE)
+  for (i in 1:N) 
+  {
+    for (j in 1:p)    
+    {
+      est[i, ] = est[i, ] + as.numeric(log(prob[[j]][, X[i, j]]))
+    }
+  }
+  
+  Yhat = apply(est, 1, which.max) - 1
+
+  sub_Yhat = Yhat
+  for(i in 1:length(sort(unique(Yhat)))){
+    which_uni = which(Yhat == sort(unique(Yhat))[i])
+    sub_Yhat[which_uni] = Y_class[i]
+  }
+  
+  miss = mean(Y != sub_Yhat)
+  
+  return(list(Yhat = Yhat, miss = miss))
+}
+
+# table(Y)
+
+
+######################################################################################################
+
 fdr_fit = function(X, Y, Prop = 0.5, alpha)
 {
   result = list()
@@ -231,15 +240,18 @@ fdr_fit = function(X, Y, Prop = 0.5, alpha)
   p = ncol(X)
   fit = nbayes(X, Y)
   
-  # BH algorithm 
-  sort_var = sort(fit$pval)               # sorring the p-values
+  #FDR 
+  sort_var = sort(fit$pval)               #p-value ø¿∏ß¬˜º¯ ¡§∑ƒ
   ind = c(1:p)
-  adj_alpha = ind * alpha / N #Ï°∞Ï†ïÎêú alpha
+  adj_alpha = ind * alpha / N #¡∂¡§µ» alpha
+  #  plot(fit$pval, cex=.5, pch=16, xlab="p", ylab="p-value", main="p=1000, n=100")  
+  #  lines(adj.alpha[1:100])
   
-  # select the significant variables
+  #FDR result
   thr = which(!(sort_var <= adj_alpha))[1] - 1
   thr = ifelse(is.na(thr), p, thr)
   thr = ifelse(thr != 0, thr, 0)
+  # ¿Ø¿««— ∫Øºˆ ∞πºˆ
   
   if(thr > 0){ 
     sel_var = fit$index[1:thr] 
@@ -253,28 +265,30 @@ fdr_fit = function(X, Y, Prop = 0.5, alpha)
 }
 
 
-# FDR based variable selection in Naive Bayes
+
+############################################################################################
+
 bhfdr = function(X, Y)
 {
 
-  # select alpha
+  # æÀ∆ƒ º±≈√
   alpha_pilot = exp(seq(log(1e-4), log(1), length.out = 20))
   
   the_num_alpha = 0
-  BH_list = list()   # list for saving the result
+  BH_list = list()   # ∫Øºˆº±≈√«— ∞·∞˙ ¿˙¿Â«œ¥¬ ∏ÆΩ∫∆Æ
   
   for(i in 1:length(alpha_pilot)){
 
     BH_list[[i]] = fdr_fit(X, Y, alpha = alpha_pilot[i])
     the_num_alpha[i] = ifelse(BH_list[[i]]$selected_val > 1, 1, 0)
   }
-  
-  #
+  #########################################
+
   pilot_id = which(the_num_alpha == 1)
   pilot_id = pilot_id[!is.na(pilot_id)]
   
-  # model selection
-  var_list = list()   # list for saving variables selected by BH algorithm
+  #∏«¸º±≈√
+  var_list = list()   # º±≈√«— ∫Øºˆ ¿˙¿Â«œ¥¬ ∏ÆΩ∫∆Æ
   cv_err = c(0, length(pilot_id))
   for (i in 1:length(pilot_id)){
     var_list[[i]] = BH_list[[pilot_id[i]]]$var
@@ -289,11 +303,11 @@ bhfdr = function(X, Y)
   err_se = cv_naive(X[, sel_var], Y, n_fold = 10)$test_error_se 
   st1_err = cv_err[id] + err_se # minimum vd err + standard error of optimal model
   
-  id = min(which(cv_err <= st1_err))    # finially selected variables
+  id = min(which(cv_err <= st1_err))    # √÷¡æ º±≈√
   
   opt_alpha = alpha_pilot[pilot_id][id]
   
-  # return the final result
+  # feature selection
   sel_fit = nbayes(X[, sel_var], Y) 
   return(list(prior = sel_fit$prior, prob = sel_fit$prob, var = sel_var, p_val = sel_fit$pval, 
               opt_alpha = opt_alpha))
