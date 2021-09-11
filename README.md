@@ -1,2 +1,2 @@
 # FDRbasedNB
-FDR-based Naive Bayes modeling
+FDR-based categorical variables selection in Naive Bayes classification
