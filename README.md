@@ -1,7 +1,7 @@
-### 1. FDR-based categorical variables selection in Naive Bayes classification
+### FDR-based categorical variables selection in Naive Bayes classification
 ---
 
-### 2. example
+### example
 ```
 # fix a seed and generate an example dataset (see in paper)
 set.seed(123)
