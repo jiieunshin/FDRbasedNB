@@ -1,7 +1,7 @@
 ### FDR-based categorical variables selection in Naive Bayes classification
 ---
 
-### example
+## Usage Example
 ```
 # fix a seed and generate an example dataset (see in paper)
 set.seed(123)
